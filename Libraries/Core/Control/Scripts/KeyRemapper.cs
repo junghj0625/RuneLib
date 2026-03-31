@@ -5,9 +5,9 @@ using UnityEngine.InputSystem;
 
 namespace Rune.Controls
 {
-    public class Remapper : MonoPlusSingleton<Remapper>
+    public class KeyRemapper : MonoPlusSingleton<KeyRemapper>
     {
-        public static void PerformInteractiveRebindingAndCheckConflict(ControlManager.ActionEntry targetActionEntry, ControlManager.ActionEntry cancelActionEntry, Action<RebindResult> onResult)
+        public static void PerformInteractiveRebindingAndCheckConflict(ControlManager.ActionEntry targetActionEntry, int bindingIndex, ControlManager.ActionEntry cancelActionEntry, Action<RebindResult> onResult)
         {
             var action = targetActionEntry.Action;
             var cancel = cancelActionEntry.Action;
@@ -17,29 +17,34 @@ namespace Rune.Controls
 
             var remapper = action.PerformInteractiveRebinding();
 
+            remapper.WithTargetBinding(bindingIndex);
+
             if (cancel.controls.Count > 0)
             {
                 remapper.WithCancelingThrough(cancel.controls[0]);
             }
 
-
             remapper.OnApplyBinding((operation, bindingPath) =>
             {
-                ControlManager.ActionEntry foundConflict = null;
+                BindingSlot? foundConflict = null;
 
                 var actionEntries = ControlManager.GetAllActionEntries();
 
                 foreach (var entry in actionEntries)
                 {
-                    if (!entry.Remapable || entry.Action == action) continue;
+                    if (!entry.IsRemappable) continue;
 
-                    foreach (var binding in entry.Action.bindings)
+                    for (int i = 0; i < entry.Action.bindings.Count; i++)
                     {
+                        if (entry.Action == action && bindingIndex == i) continue;
+
+                        var binding = entry.Action.bindings[i];
+
                         if (string.IsNullOrEmpty(binding.effectivePath)) continue;
 
                         if (binding.effectivePath == bindingPath)
                         {
-                            foundConflict = entry;
+                            foundConflict = new() { entry = entry, bindingIndex = i };
 
                             break;
                         }
@@ -54,7 +59,7 @@ namespace Rune.Controls
 
                 onResult?.Invoke(new()
                 {
-                    target = targetActionEntry,
+                    target = new() { entry = targetActionEntry, bindingIndex = bindingIndex },
                     conflict = foundConflict,
                     bindingPath = bindingPath,
                     isCancelled = false,
@@ -79,15 +84,20 @@ namespace Rune.Controls
             .Start();
         }
 
-        public static void ApplyBindingOverride(ControlManager.ActionEntry target, string bindingPath)
+        public static void ApplyBindingOverride(ControlManager.ActionEntry target, int bindingIndex, string bindingPath)
         {
-            target.Action.RemoveAllBindingOverrides();
-            target.Action.ApplyBindingOverride(bindingPath);
+            target.Action.RemoveBindingOverride(bindingIndex);
+            target.Action.ApplyBindingOverride(bindingIndex, bindingPath);
         }
 
-        public static void RemoveAllBindingOverrides(ControlManager.ActionEntry target)
+        public static void ApplyBindingOverrideAsNone(ControlManager.ActionEntry target, int bindingIndex)
         {
-            target.Action.RemoveAllBindingOverrides();
+            target.Action.ApplyBindingOverride(bindingIndex, "<None>");
+        }
+
+        public static void RemoveBindingOverride(ControlManager.ActionEntry target, int bindingIndex)
+        {
+            target.Action.RemoveBindingOverride(bindingIndex);
         }
     }
 
@@ -95,11 +105,19 @@ namespace Rune.Controls
 
     public struct RebindResult
     {
-        public ControlManager.ActionEntry target;
-        public ControlManager.ActionEntry conflict;
+        public BindingSlot target;
+        public BindingSlot? conflict;
 
         public string bindingPath;
         
         public bool isCancelled;
+    }
+
+
+    public struct BindingSlot
+    {
+        public ControlManager.ActionEntry entry;
+
+        public int bindingIndex;
     }
 }

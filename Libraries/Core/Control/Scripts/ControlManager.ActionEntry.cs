@@ -22,14 +22,15 @@ namespace Rune.Controls
             {
                 if (bindingIndex < 0 || bindingIndex >= Action.bindings.Count) return string.Empty;
 
-                return InputControlPath.ToHumanReadableString
-                (
-                    Action.bindings[bindingIndex].effectivePath,
-                    InputControlPath.HumanReadableStringOptions.OmitDevice
-                );
+                return GetControlTextFromBindingPath(Action.bindings[bindingIndex].effectivePath);
             }
 
 
+
+            public string Text
+            {
+                get => FuncGetText?.Invoke();
+            }
 
             public string Device
             {
@@ -53,11 +54,10 @@ namespace Rune.Controls
 
 
 
+            public bool IsRemappable { get; set; } = false;
+
             public string Type { get; set; } = string.Empty;
-
             public string ActionPath { get; set; } = string.Empty;
-
-            public bool Remapable { get; set; } = false;
 
             public Func<string> FuncGetText { get; set; } = null;
 

@@ -42,6 +42,28 @@ namespace Rune.Localization
         }
 
 
+        public static Locale GetBestLocale()
+        {
+            var selectors = LocalizationSettings.Instance.GetStartupLocaleSelectors();
+
+            var availableLocales = LocalizationSettings.AvailableLocales;
+
+            Locale foundLocale = null;
+
+            foreach (var selector in selectors)
+            {
+                foundLocale = selector.GetStartupLocale(availableLocales);
+
+                if (foundLocale != null)
+                {
+                    break; 
+                }
+            }
+
+            return foundLocale;
+        }
+
+
 
         public static List<Locale> Locales
         {

@@ -14,14 +14,15 @@ A collection of essential utilities, helpers, and architectural components desig
 ## 🛠 Installation
 
 1.  Download or clone this repository.
-2.  Copy the `ooolib` folder into your Unity project's `Assets` directory.
-3.  You're ready to go!
+2.  Copy the folder into your Unity project's Assets directory.
+3.  ??????
+4.  PROFIT!
 
 
-## How to clone Rune as a submodule
+## How to add RuneLib as a submodule
 
 ```Bash
-git submodule update --init --recursive
+git submodule add https://github.com/junghj0625/RuneLib.git <path>
 ```
 
 

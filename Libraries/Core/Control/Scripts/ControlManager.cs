@@ -64,16 +64,28 @@ namespace Rune.Controls
         {
             return control switch
             {
+                "Up Arrow" => "↑",
+                "Down Arrow" => "↓",
+                "Left Arrow" => "←",
+                "Right Arrow" => "→",
+                "Space" => "␣",
                 "Escape" => "ESC",
                 "Control" => "Ctrl",
                 _ => control,
             };
         }
 
+        public static string GetControlTextFromBindingPath(string bindingPath)
+        {
+            return InputControlPath.ToHumanReadableString(bindingPath, InputControlPath.HumanReadableStringOptions.OmitDevice);
+        }
+
         public static string GetMouseButtonIcon(string control)
         {
             return _mouseIconLookup.GetValueOrDefault(control);
         }
+
+        
 
 
         public static List<ActionEntry> GetAllActionEntries()
