@@ -70,7 +70,9 @@ namespace Rune.Audio
 
         public void Play(SoundPlayData data, float volumeScale = 1.0f)
         {
-            if (data == null || !Pools.SoundPool.TryGet(data.Name, out var sound)) return;
+            if (data == null || this == null) return;
+
+            if (!Pools.SoundPool.TryGet(data.Name, out var sound)) return;
 
 
             if (IsSpatial && Is2D)
@@ -82,6 +84,8 @@ namespace Rune.Audio
             int index = Mathf.Clamp(Random.Range(data.MinPitch, data.MaxPitch), -_pitchRange, _pitchRange) + _pitchRange;
 
             var audioSource = _audioSources[index];
+
+            if (audioSource == null) return;
 
 
             audioSource.clip = sound;
@@ -91,7 +95,9 @@ namespace Rune.Audio
 
         public void PlayOneShot(SoundPlayData data, float volumeScale = 1.0f)
         {
-            if (data == null || !Pools.SoundPool.TryGet(data.Name, out var sound)) return;
+            if (data == null || this == null) return;
+
+            if (!Pools.SoundPool.TryGet(data.Name, out var sound)) return;
 
 
             if (IsSpatial && Is2D)
@@ -103,6 +109,8 @@ namespace Rune.Audio
             int index = Mathf.Clamp(Random.Range(data.MinPitch, data.MaxPitch), -_pitchRange, _pitchRange) + _pitchRange;
 
             var audioSource = _audioSources[index];
+
+            if (audioSource == null) return;
 
 
             audioSource.PlayOneShot(sound, GetVolume(data, volumeScale));

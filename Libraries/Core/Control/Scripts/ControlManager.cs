@@ -21,7 +21,6 @@ namespace Rune.Controls
             }
         }
 
-
         public static void RegisterController(Controller controller)
         {
             if (controller == null) return;
@@ -84,8 +83,6 @@ namespace Rune.Controls
         {
             return _mouseIconLookup.GetValueOrDefault(control);
         }
-
-        
 
 
         public static List<ActionEntry> GetAllActionEntries()
