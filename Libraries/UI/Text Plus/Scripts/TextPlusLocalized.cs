@@ -44,14 +44,6 @@ namespace Rune.UI
 
 
 
-        public new BaseData Data
-        {
-            get => _data.Value;
-            set => _data.Value = value;
-        }
-
-
-
         private void OnChangeData(BaseData value)
         {
             _localizedString.TableReference = value.Table;
@@ -60,13 +52,16 @@ namespace Rune.UI
 
         private void OnChangeLocalizedString(string value)
         {
-            base._data.Value.Value = value;
+            base._data.Value.Value = Data.UseTag ? TagParser.Parse(value) : value;
             base._data.Refresh();
         }
 
 
 
         private readonly new Attribute<BaseData> _data = new(new());
+        public new BaseData Data { get => _data.Value; set => _data.Value = value; }
+
+
 
         private readonly LocalizedString _localizedString = new();
 
@@ -76,6 +71,8 @@ namespace Rune.UI
         {
             public string Table { get; set; } = string.Empty;
             public string Entry { get; set; } = string.Empty;
+
+            public bool UseTag { get; set; } = false;
 
             public Func<string, string> Converter { get; set; } = null;
         }
