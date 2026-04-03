@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -12,61 +13,26 @@ namespace Rune.UI
             base.InitObjects();
 
             RectValue.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, RectArea.rect.width);
-            
+            RectValue.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, RectArea.rect.height);
+            RectValue.pivot = _pivotLookup[direction];
+
             RectValueChanged.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, RectArea.rect.width);
-
-            if (direction == Direction.Horizontal)
-            {
-                RectValue.pivot = new Vector2(0.0f, 0.5f);
-            }
-            else if (direction == Direction.Vertical)
-            {
-                RectValue.pivot = new Vector2(0.5f, 0.0f);
-            }
-        }
-
-        public override void Refresh()
-        {
-            base.Refresh();
-
-            switch (_attributeValue)
-            {
-                case AttributeClampedInt attributeClampedInt:
-                    _valueNew = attributeClampedInt.Value;
-                    _valueMaxNew = attributeClampedInt.ValueMax;
-                    break;
-
-                case AttributeClampedFloat attributeClampedFloat:
-                    _valueNew = attributeClampedFloat.Value;
-                    _valueMaxNew = attributeClampedFloat.ValueMax;
-                    break;
-
-                default:
-                
-                    switch (idleMode)
-                    {
-                        case IdleMode.Full:
-                            _valueNew = 1;
-                            _valueMaxNew = 1;
-                            break;
-
-                        case IdleMode.Empty:
-                            _valueNew = 0;
-                            _valueMaxNew = 1;
-                            break;
-                    }
-
-                    break;
-            }
-
-            UpdateBar();
+            RectValueChanged.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, RectArea.rect.height);
+            RectValueChanged.pivot = _pivotLookup[direction];
         }
 
         public override void OnEnable()
         {
             base.OnEnable();
 
-            Refresh();
+            Change(false);
+        }
+
+        public override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            SetAttributeValue(null);
         }
 
 
@@ -84,133 +50,132 @@ namespace Rune.UI
             switch (_attributeValue)
             {
                 case AttributeClampedInt attributeClampedInt:
-                    attributeClampedInt.OnChangeOldToNew.RemoveListener(OnValueChange);
+                    attributeClampedInt.OnChange.RemoveListener(OnValueChange);
                     break;
 
                 case AttributeClampedFloat attributeClampedFloat:
-                    attributeClampedFloat.OnChangeOldToNew.RemoveListener(OnValueChange);
+                    attributeClampedFloat.OnChange.RemoveListener(OnValueChange);
                     break;
             }
-
-
-            _attributeValue = attribute;
 
 
             // Set attribute
+            _attributeValue = attribute;
+
             switch (_attributeValue)
             {
                 case AttributeClampedInt attributeClampedInt:
-                    attributeClampedInt.OnChangeOldToNew.AddListener(OnValueChange);
+                    attributeClampedInt.OnChange.AddListener(OnValueChange);
                     break;
 
                 case AttributeClampedFloat attributeClampedFloat:
-                    attributeClampedFloat.OnChangeOldToNew.AddListener(OnValueChange);
+                    attributeClampedFloat.OnChange.AddListener(OnValueChange);
                     break;
             }
 
 
-            Refresh();
+            Change(false);
         }
 
 
 
-        public Direction direction = Direction.Horizontal;
-
-        public IdleMode idleMode = IdleMode.Full;
+        public DirectionType direction = DirectionType.LeftToRight;
 
         public bool smoothTransition = true;
 
+        public float smoothTransitionSpeed = 30.0f;
+        public float smoothTransitionWaitTime = 1.0f;
 
 
-        private void OnValueChange(int oldValue, int newValue)
+
+        private void OnValueChange(int value)
         {
-            _valueOld = oldValue;
-            _valueNew = newValue;
-
-            UpdateBar();
+            Change(smoothTransition);
         }
 
-        private void OnValueChange(float oldValue, float newValue)
+        private void OnValueChange(float value)
         {
-            _valueOld = oldValue;
-            _valueNew = newValue;
-
-            UpdateBar();
+            Change(smoothTransition);
         }
 
-        private void UpdateBar()
+        private void Change(bool smooth)
         {
             if (!gameObject.activeInHierarchy) return;
-
-
-            _damaged = _valueOld > _valueNew;
-
-
-            float ratio = Mathf.Clamp(_valueNew / _valueMaxNew, 0.0f, 1.0f);
-
-            if (direction == Direction.Horizontal)
+            
+            
+            float currentValue, maxValue;
+            
+            if (_attributeValue is AttributeClampedInt ai)
             {
-                RectValue.anchoredPosition = new Vector2(-RectArea.rect.width * (1.0f - ratio), 0);
+                currentValue = ai.Value;
+                maxValue = ai.ValueMax;
             }
-            else if (direction == Direction.Vertical)
+            else if (_attributeValue is AttributeClampedFloat af)
             {
-                RectValue.anchoredPosition = new Vector2(0, -RectArea.rect.height * (1.0f - ratio));
-            }
-
-
-            if (_damaged)
-            {
-                if (_coroutineChanging != null) StopCoroutine(_coroutineChanging);
-
-                _coroutineChanging = StartCoroutine(ChangeRoutine());
+                currentValue = af.Value;
+                maxValue = af.ValueMax;
             }
             else
             {
-                if (_coroutineChanging == null)
-                {
-                    if (direction == Direction.Horizontal)
-                    {
-                        RectValueChanged.anchoredPosition = new Vector2(-RectArea.rect.width * (1.0f - ratio), 0);
-                    }
-                    else if (direction == Direction.Vertical)
-                    {
-                        RectValueChanged.anchoredPosition = new Vector2(0, -RectArea.rect.height * (1.0f - ratio));
-                    }
-                }
+                return;
             }
-        }
 
-        private IEnumerator ChangeRoutine()
-        {
-            if (_damaged && smoothTransition)
+
+            float ratio = Mathf.Clamp(currentValue / maxValue, 0.0f, 1.0f);
+
+            RectValue.anchoredPosition = RatioToAnchoredPosition(ratio);
+
+
+            bool reducing = direction switch
             {
-                yield return new WaitForSecondsRealtime(_changeWaitingTime);
+                DirectionType.LeftToRight => RectValueChanged.anchoredPosition.x > RectValue.anchoredPosition.x,
+                DirectionType.RightToLeft => RectValueChanged.anchoredPosition.x < RectValue.anchoredPosition.x,
+                DirectionType.DownToUp => RectValueChanged.anchoredPosition.y > RectValue.anchoredPosition.y,
+                DirectionType.UpToDown => RectValueChanged.anchoredPosition.y < RectValue.anchoredPosition.y,
+                _ => new(),
+            };
 
 
-                if (direction == Direction.Horizontal)
-                {
-                    while (RectValueChanged.anchoredPosition.x > RectValue.anchoredPosition.x)
-                    {
-                        RectValueChanged.anchoredPosition = new Vector2(RectValueChanged.anchoredPosition.x - Time.unscaledDeltaTime * _changeTransitionSpeed, 0);
-
-                        yield return null;
-                    }
-                }
-                else if (direction == Direction.Vertical)
-                {
-                    while (RectValueChanged.anchoredPosition.y > RectValue.anchoredPosition.y)
-                    {
-                        RectValueChanged.anchoredPosition = new Vector2(0, RectValueChanged.anchoredPosition.y - Time.unscaledDeltaTime * _changeTransitionSpeed);
-
-                        yield return null;
-                    }
-                }
+            if (reducing && smooth)
+            {
+                _smoothTransitionPlayer.Run(this, SmoothTransition());
+            }
+            else
+            {
+                RectValueChanged.anchoredPosition = RectValue.anchoredPosition;
             }
 
 
-            RectValueChanged.anchoredPosition = RectValue.anchoredPosition;
+            Vector2 RatioToAnchoredPosition(float ratio)
+            {
+                return direction switch
+                {
+                    DirectionType.LeftToRight => new Vector2(-RectArea.rect.width * (1.0f - ratio), 0),
+                    DirectionType.RightToLeft => new Vector2(RectArea.rect.width * (1.0f - ratio), 0),
+                    DirectionType.DownToUp => new Vector2(0, -RectArea.rect.height * (1.0f - ratio)),
+                    DirectionType.UpToDown => new Vector2(0, RectArea.rect.height * (1.0f - ratio)),
+                    _ => new(),
+                };
+            }
+        
 
-            _coroutineChanging = null;
+            IEnumerator SmoothTransition()
+            {
+                if (smoothTransition)
+                {
+                    yield return new WaitForSecondsRealtime(smoothTransitionWaitTime);
+
+                    while (Vector2.Distance(RectValue.anchoredPosition, RectValueChanged.anchoredPosition) > 0.01f)
+                    {
+                        RectValueChanged.anchoredPosition = Vector2.MoveTowards(RectValueChanged.anchoredPosition, RectValue.anchoredPosition, smoothTransitionSpeed * Time.unscaledDeltaTime);
+
+                        yield return null;
+                    }
+                }
+                
+                
+                RectValueChanged.anchoredPosition = RectValue.anchoredPosition;
+            }
         }
 
 
@@ -226,34 +191,28 @@ namespace Rune.UI
 
 
 
-        private bool _damaged = false;
-
-        private float _valueOld = 0.0f;
-        private float _valueNew = 0.0f;
-        private float _valueMaxNew = 0.0f;
-
-        private float _changeWaitingTime = 1.0f;
-        private float _changeTransitionSpeed = 30.0f;
-
-        private Coroutine _coroutineChanging = null;
+        private readonly RoutinePlayer _smoothTransitionPlayer = new();
 
         private AttributeBase _attributeValue = null;
 
 
 
-        public enum Direction
+        private static readonly Dictionary<DirectionType, Vector2> _pivotLookup = new()
         {
-            Horizontal,
-            Vertical,
-        }
+            [DirectionType.LeftToRight] = new(0.0f, 0.5f),
+            [DirectionType.RightToLeft] = new(1.0f, 0.5f),
+            [DirectionType.DownToUp] = new Vector2(0.5f, 0.0f),
+            [DirectionType.UpToDown] = new Vector2(0.5f, 1.0f),
+        };
 
 
 
-        public enum IdleMode
+        public enum DirectionType
         {
-            None,
-            Full,
-            Empty,
+            LeftToRight,
+            RightToLeft,
+            DownToUp,
+            UpToDown,
         }
     }
 }
