@@ -37,14 +37,6 @@ namespace Rune.UI
 
 
 
-        public BaseData Data
-        {
-            get => _data.Value;
-            set => _data.Value = value;
-        }
-
-
-
         private void OnChangeData(BaseData value)
         {
             string textValue = _data.Value.Value;
@@ -69,6 +61,9 @@ namespace Rune.UI
 
 
         protected readonly Attribute<BaseData> _data = new(new());
+        public BaseData Data { get => _data.Value; set => _data.Value = value; }
+
+
 
         private string _defaultText = string.Empty;
 
