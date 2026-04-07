@@ -1,7 +1,3 @@
-// Date: 2025-07-28
-
-
-
 using System;
 using System.Collections;
 using System.Threading.Tasks;
