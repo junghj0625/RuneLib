@@ -88,17 +88,29 @@ namespace Rune.Controls
         {
             target.Action.RemoveBindingOverride(bindingIndex);
             target.Action.ApplyBindingOverride(bindingIndex, bindingPath);
+
+            OnChangeBindingOverride.Invoke(new() { target = target, bindingIndex = bindingIndex, bindingPath = bindingPath });
         }
 
         public static void ApplyBindingOverrideAsNone(ControlManager.ActionEntry target, int bindingIndex)
         {
-            target.Action.ApplyBindingOverride(bindingIndex, "<None>");
+            string path = "<None>";
+
+            target.Action.ApplyBindingOverride(bindingIndex, path);
+
+            OnChangeBindingOverride.Invoke(new() { target = target, bindingIndex = bindingIndex, bindingPath = path });
         }
 
         public static void RemoveBindingOverride(ControlManager.ActionEntry target, int bindingIndex)
         {
             target.Action.RemoveBindingOverride(bindingIndex);
+
+            OnChangeBindingOverride.Invoke(new() { target = target, bindingIndex = bindingIndex, bindingPath = string.Empty });
         }
+    
+    
+    
+        public static LooseEvent<BindingOverrideData> OnChangeBindingOverride { get; } = new();
     }
 
 
@@ -114,10 +126,22 @@ namespace Rune.Controls
     }
 
 
+
     public struct BindingSlot
     {
         public ControlManager.ActionEntry entry;
 
         public int bindingIndex;
+    }
+
+
+
+    public struct BindingOverrideData
+    {
+        public ControlManager.ActionEntry target;
+        
+        public int bindingIndex;
+        
+        public string bindingPath;
     }
 }
