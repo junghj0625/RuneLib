@@ -20,7 +20,7 @@ namespace Rune.Localization
         {
             if (string.IsNullOrEmpty(table) || string.IsNullOrEmpty(entry))
             {
-                DebugManager.Log($"Localizer table or entry is empty. (Table: {table}, Entry: {entry})");
+                //DebugManager.Log($"Localizer table or entry is empty. (Table: {table}, Entry: {entry})");
 
                 return string.Empty;
             }
