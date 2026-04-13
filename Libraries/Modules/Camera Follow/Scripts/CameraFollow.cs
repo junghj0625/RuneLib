@@ -39,7 +39,7 @@ namespace Rune
 
         public float Speed { get; set; } = 3.0f;
 
-        public Vector2 Offset = new(0, 0);
+        public Vector2 Offset { get; set; } = new(0, 0);
 
 
 
