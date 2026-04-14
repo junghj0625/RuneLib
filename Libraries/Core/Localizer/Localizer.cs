@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 
@@ -44,21 +45,51 @@ namespace Rune.Localization
 
         public static Locale GetBestLocale()
         {
-            var selectors = LocalizationSettings.Instance.GetStartupLocaleSelectors();
-
             var availableLocales = LocalizationSettings.AvailableLocales;
 
             Locale foundLocale = null;
 
-            foreach (var selector in selectors)
-            {
-                foundLocale = selector.GetStartupLocale(availableLocales);
 
-                if (foundLocale != null)
+            /* Steam Language? */
+
+
+            // Best language
+            if (foundLocale == null)
+            {
+                var selectors = LocalizationSettings.Instance.GetStartupLocaleSelectors();
+
+                foreach (var selector in selectors)
                 {
-                    break; 
+                    foundLocale = selector.GetStartupLocale(availableLocales);
+                
+                    if (foundLocale != null) break;
                 }
             }
+
+
+            // Check release metadata
+            if (foundLocale != null)
+            {
+                var meta = foundLocale.Metadata.GetMetadata<LocaleReleaseMetadata>();
+
+                if (meta == null || !meta.isReleased) 
+                {
+                    foundLocale = null;
+                }
+            }
+
+
+            // Fallback
+            if (foundLocale == null)
+            {
+                foundLocale = LocalizationSettings.ProjectLocale;
+            }
+            
+            if (foundLocale == null)
+            {
+                foundLocale = availableLocales.Locales.FirstOrDefault();
+            }
+
 
             return foundLocale;
         }
@@ -67,7 +98,12 @@ namespace Rune.Localization
 
         public static List<Locale> Locales
         {
-            get => LocalizationSettings.AvailableLocales.Locales;
+            get
+            {
+                var availableLocales = LocalizationSettings.AvailableLocales.Locales;
+
+                return availableLocales.Where(l => l.Metadata.GetMetadata<LocaleReleaseMetadata>().isReleased).ToList();
+            }
         }
 
         public static Locale CurrentLocale
