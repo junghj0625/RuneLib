@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Rune;
 using UnityEngine;
 
 
 
-namespace ICT.Controls
+namespace Rune.Controls
 {
     public class ActionBuffer : MonoPlusModule
     {
