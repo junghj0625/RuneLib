@@ -64,6 +64,7 @@ namespace Rune.Audio
             base.Refresh();
 
             _isSpatial.Refresh();
+            _is2D.Refresh();
             _loop.Refresh();
         }
 
@@ -156,7 +157,7 @@ namespace Rune.Audio
 
 
         private GameObject _template = null;
-        private GameObject Template { get => LazyGetGameObjectFromPath(ref _template, "Template"); }
+        public GameObject Template { get => LazyGetGameObjectFromPath(ref _template, "Template"); }
 
 
 
@@ -186,7 +187,7 @@ namespace Rune.Audio
 
         public float Volume { get; set; } = 1.0f;
 
-        public int MaxPitch { get; set; } = -2;
-        public int MinPitch { get; set; } = 2;
+        public int MaxPitch { get; set; } = 2;
+        public int MinPitch { get; set; } = -2;
     }
 }
