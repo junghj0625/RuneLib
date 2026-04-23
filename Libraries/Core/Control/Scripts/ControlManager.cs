@@ -11,7 +11,10 @@ namespace Rune.Controls
     {
         public static void AddActionEntries(List<ActionEntry> actionEntries)
         {
-            foreach (var actionEntry in actionEntries) _actionEntries.Add(actionEntry.Type, actionEntry);
+            foreach (var actionEntry in actionEntries)
+            {
+                _actionEntries.Add(actionEntry.Type, actionEntry);
+            }
 
             foreach (var registeredController in _registeredControllers)
             {
@@ -117,12 +120,18 @@ namespace Rune.Controls
 
         private static void AddControllerCallbacks(Controller controller)
         {
-            foreach (var actionEntry in _actionEntries.Values) AddCallback(actionEntry.Type, actionEntry.FuncGetCallback(controller));
+            foreach (var actionEntry in _actionEntries.Values)
+            {
+                AddCallback(actionEntry.Type, actionEntry.FuncGetCallback(controller));
+            }
         }
 
         private static void RemoveControllerCallbacks(Controller controller)
         {
-            foreach (var actionEntry in _actionEntries.Values) RemoveCallback(actionEntry.Type, actionEntry.FuncGetCallback(controller));
+            foreach (var actionEntry in _actionEntries.Values)
+            {
+                RemoveCallback(actionEntry.Type, actionEntry.FuncGetCallback(controller));
+            }
         }
 
 
