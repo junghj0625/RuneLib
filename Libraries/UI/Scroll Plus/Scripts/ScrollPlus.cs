@@ -9,8 +9,8 @@ namespace Rune.UI
     {
         public void GoToChild(int index)
         {
-            float heightViewport = RectViewport.rect.height;
-            float heightContent = RectContent.rect.height;
+            float heightViewport = ViewportRect.rect.height;
+            float heightContent = ContentRect.rect.height;
 
             float delta = heightContent - heightViewport;
 
@@ -19,20 +19,20 @@ namespace Rune.UI
 
             // Get active child
             int childIndex = 0;
-            int childCount = RectContent.childCount;
+            int childCount = ContentRect.childCount;
 
             if (childIndex >= childCount) return;
 
             for (int k = -1; childIndex < childCount; childIndex++)
             {
-                var child = RectContent.GetChild(childIndex);
+                var child = ContentRect.GetChild(childIndex);
 
                 if (child.gameObject.activeSelf) k++;
 
                 if (k == index) break;
             }
 
-            var rectChild = RectContent.GetChild(childIndex).GetComponent<RectTransform>();
+            var rectChild = ContentRect.GetChild(childIndex).GetComponent<RectTransform>();
 
 
             // Compute normalized position
@@ -66,10 +66,10 @@ namespace Rune.UI
 
 
         private RectTransform _rectViewport = null;
-        public RectTransform RectViewport { get => LazyGetComponentFromTransform(ref _rectViewport, transform.Find("Viewport")); }
+        public RectTransform ViewportRect { get => LazyGetComponentFromTransform(ref _rectViewport, transform.Find("Viewport")); }
 
         private RectTransform _rectContent = null;
-        public RectTransform RectContent { get => LazyGetComponentFromTransform(ref _rectContent, transform.Find("Viewport/Content")); }
+        public RectTransform ContentRect { get => LazyGetComponentFromTransform(ref _rectContent, transform.Find("Viewport/Content")); }
 
         private ScrollRect _scrollRect = null;
         public ScrollRect ScrollRect { get => LazyGetComponent(ref _scrollRect); }
